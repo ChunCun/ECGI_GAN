@@ -74,12 +74,12 @@ class pix2pix(object):
         #                                 name='real_A_and_B_images')
 	# Chunhui add
         self.real_data = tf.placeholder(tf.float32,
-                                        [self.batch_size, 1, 1620,
+                                        [self.batch_size, 1, self.image_size,
                                          1],
                                         name='real_A_and_B_images')
 
         # image: 1*256*256*3 signal: 1*1*599*1
-        self.real_B = self.real_data[:, :, 1021:1620, :]
+        self.real_B = self.real_data[:, :, 1021:self.image_size, :]
         # image: 1*256*256*3 signal: 1*1*1022*1
         self.real_A = self.real_data[:, :, 0:1021, :]
 	print("real_B", self.real_B)
@@ -125,13 +125,17 @@ class pix2pix(object):
 
 
     def load_random_samples(self):
-        data = np.random.choice(glob('./datasets/{}/val/*.jpg'.format(self.dataset_name)), self.batch_size)
-        sample = [load_data(sample_file) for sample_file in data]
+        # data = np.random.choice(glob('./datasets/{}/val/*.jpg'.format(self.dataset_name)), self.batch_size)
+        data = np.random.choice(glob('./datasets/{}/val/*.txt'.format(self.dataset_name)), self.batch_size)
+        sample = [load_data_sig(sample_file) for sample_file in data]
 
-        if (self.is_grayscale):
-            sample_images = np.array(sample).astype(np.float32)[:, :, :, None]
-        else:
-            sample_images = np.array(sample).astype(np.float32)
+        # if (self.is_grayscale):
+        #     sample_images = np.array(sample).astype(np.float32)[:, :, :, None]
+        # else:
+        #     sample_images = np.array(sample).astype(np.float32)
+        sample_images = np.array(sample).astype(np.float32)
+        sample_images = np.reshape(sample_images, (1, 1, self.image_size,1))
+       
         return sample_images
 
     def sample_model(self, sample_dir, epoch, idx):
@@ -140,7 +144,10 @@ class pix2pix(object):
             [self.fake_B_sample, self.d_loss, self.g_loss],
             feed_dict={self.real_data: sample_images}
         )
-        save_images(samples, [self.batch_size, 1],
+        # save_images(samples, [self.batch_size, 1],
+        #             './{}/train_{:02d}_{:04d}.png'.format(sample_dir, epoch, idx))
+        samples=np.reshape(samples, (1, 599))
+        save_signal(samples, [self.batch_size, 1],
                     './{}/train_{:02d}_{:04d}.png'.format(sample_dir, epoch, idx))
         print("[Sample] d_loss: {:.8f}, g_loss: {:.8f}".format(d_loss, g_loss))
 
@@ -185,7 +192,7 @@ class pix2pix(object):
                 # else:
                 #    batch_images = np.array(batch).astype(np.float32)
                 batch_images = np.array(batch).astype(np.float32)
-                batch_images = np.reshape(batch_images, (self.batch_size, 1, 1620,1))
+                batch_images = np.reshape(batch_images, (self.batch_size, 1, self.image_size,1))
                 # Update D network
                 _, summary_str = self.sess.run([d_optim, self.d_sum],
                                                feed_dict={ self.real_data: batch_images })
@@ -242,7 +249,7 @@ class pix2pix(object):
 		phaseshuffle = lambda x: x
 
 	    output = image
-	    output = tf.reshape(output, [self.batch_size, 1620, 1])
+	    output = tf.reshape(output, [self.batch_size, self.image_size, 1])
 	    print('discriminator_reshape', output)
             output = tf.layers.conv1d(output, dim*2, 85, 3, padding='VALID', name='d_h0_conv')
 	    print('discriminator_conv1d_1', output)
