@@ -9,7 +9,9 @@ import pprint
 import scipy.misc
 import numpy as np
 from time import gmtime, strftime
-
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 pp = pprint.PrettyPrinter()
 
 get_stddev = lambda x, k_h, k_w: 1/math.sqrt(k_w*k_h*x.get_shape()[-1])
@@ -82,6 +84,19 @@ def save_signal(signals, size, signal_path):
     with open(signal_path, 'ab') as f:
     	np.savetxt(f, signals, delimiter=' ')
     f.close()
+    return None
+
+def save_signal_img(signals, size, signal_path):
+    xData=np.arange(0,599,1)
+    signals=np.reshape(signals, (599,1))
+    plt.figure(num = 1, figsize=(8,6))
+    plt.clf()
+    plt.plot(xData, signals, color = 'blue', linewidth = 0.5, linestyle = '-')
+    plt.xlim(0, 600)
+    plt.ylim(-1, 1)
+    plt.grid(True)
+    plt.savefig(signal_path, format='png') 
+    plt.clf()
     return None
 
 def imread(path, is_grayscale = False):
