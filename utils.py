@@ -87,13 +87,13 @@ def save_signal(signals, size, signal_path):
     return None
 
 def save_signal_img(signals, size, signal_path):
-    xData=np.arange(0,599,1)
-    signals=np.reshape(signals, (599,1))
+    xData=np.arange(0,2021,1)
+    signals=np.reshape(signals, (2021,1))
     plt.figure(num = 1, figsize=(8,6))
     plt.clf()
     plt.plot(xData, signals, color = 'blue', linewidth = 0.5, linestyle = '-')
-    plt.xlim(0, 600)
-    plt.ylim(-1, 1)
+    # plt.xlim(0, 2050)
+    # plt.ylim(-1, 1)
     plt.grid(True)
     plt.savefig(signal_path, format='png') 
     plt.clf()

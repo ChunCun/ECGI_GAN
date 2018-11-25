@@ -79,10 +79,10 @@ class pix2pix(object):
                                          1],
                                         name='real_A_and_B_images')
 
-        # image: 1*256*256*3 signal: 1*1*599*1
-        self.real_B = self.real_data[:, :, 1021:self.image_size, :]
-        # image: 1*256*256*3 signal: 1*1*1022*1
-        self.real_A = self.real_data[:, :, 0:1021, :]
+        # image: 1*256*256*3 signal: 1*1*599*1 1*1*2022*1
+        self.real_B = self.real_data[:, :, 252:self.image_size, :]
+        # image: 1*256*256*3 signal: 1*1*1022*1 1*1*252*1
+        self.real_A = self.real_data[:, :, 0:252, :]
 	print("real_B", self.real_B)
 	print("real_A", self.real_A)
         self.fake_B = self.generator(self.real_A)
@@ -152,7 +152,8 @@ class pix2pix(object):
         )
         # save_images(samples, [self.batch_size, 1],
         #             './{}/train_{:02d}_{:04d}.png'.format(sample_dir, epoch, idx))
-        samples=np.reshape(samples, (1, 599))
+        # samples=np.reshape(samples, (1, 599))
+        samples=np.reshape(samples, (1, 2021))
         save_signal(samples, [self.batch_size, 1],
                     './{}/train_{:02d}_{:04d}.txt'.format(sample_dir, epoch, idx))
         save_signal_img(samples, [self.batch_size, 1],
@@ -237,6 +238,7 @@ class pix2pix(object):
 
         with tf.variable_scope("discriminator") as scope:
             # signal is 1620*1
+            # signal is 2274*1
             kernel_len = 10
             dim = 16
             use_batchnorm = False
@@ -261,8 +263,8 @@ class pix2pix(object):
 	    output = image
 #	     output = tf.reshape(output, [self.batch_size, self.image_size, 1])
 	    output = tf.reshape(output, [self.batch_size, self.image_size])
-	    output = tf.layers.dense(output,1024)
-	    output = tf.reshape(output, [self.batch_size, 1024, 1])
+	    output = tf.layers.dense(output,2048)
+	    output = tf.reshape(output, [self.batch_size, 2048, 1])
 	    print('discriminator_reshape', output)
 #            output = tf.layers.conv1d(output, dim*2, 85, 3, padding='VALID', name='d_h0_conv')
             
@@ -296,7 +298,7 @@ class pix2pix(object):
             # output = phaseshuffle(output)
             
 	    print('discriminator_conv1d_7', output)
-            output = tf.reshape(output, [self.batch_size, 64])
+            output = tf.reshape(output, [self.batch_size, 128])
             output = tf.layers.dense(output, 1)[:,0]
 	    print('discriminator_final', output)
 
@@ -333,45 +335,45 @@ class pix2pix(object):
 		batchnorm = lambda x: x
 
             output = image
-            output = tf.reshape(output, [self.batch_size, 1021])
-            output = tf.layers.dense(output, 1024)
-            output = tf.reshape(output, [self.batch_size, 16, dim])
+            output = tf.reshape(output, [self.batch_size, 252])
+            output = tf.layers.dense(output, 2048)
+            output = tf.reshape(output, [self.batch_size, 2, 1024])
             output = batchnorm(output)
             output = lrelu(output)
             # output = tf.nn.tanh(output)
             
-            output = conv1d_transpose(output, 32, kernal_len, 2, upsample=upsample, name='g_e1_conv')
+            output = conv1d_transpose(output, 512, kernal_len, 4, upsample=upsample, name='g_e1_conv')
             output = batchnorm(output)
             output = lrelu(output)
             # output = tf.nn.tanh(output)
 
-            output = conv1d_transpose(output, 16 , kernal_len, 2, upsample=upsample, name='g_e2_conv')
+            output = conv1d_transpose(output, 256, kernal_len, 4, upsample=upsample, name='g_e2_conv')
             output = batchnorm(output)
             output = lrelu(output)
             # output = tf.nn.tanh(output)
 
-            output = conv1d_transpose(output, 8, kernal_len, 2, upsample=upsample, name='g_e3_conv')
+            output = conv1d_transpose(output, 128, kernal_len, 4, upsample=upsample, name='g_e3_conv')
             output = batchnorm(output)
             output = lrelu(output)
             # output = tf.nn.tanh(output)
 
-            output = conv1d_transpose(output, 4, kernal_len, 2, upsample=upsample, name='g_e4_conv')
+            output = conv1d_transpose(output, 64, kernal_len, 4, upsample=upsample, name='g_e4_conv')
             output = batchnorm(output)
             output = lrelu(output)
             # output = tf.nn.tanh(output)
 
-            output = conv1d_transpose(output, 2, kernal_len, 2, upsample=upsample, name='g_e5_conv')
+            output = conv1d_transpose(output, 1, kernal_len, 4, upsample=upsample, name='g_e5_conv')
             output = batchnorm(output)
             output = lrelu(output)
             # output = tf.nn.tanh(output)
             
-            output = conv1d_transpose(output, 1, kernal_len, 2, upsample=upsample, name='g_e6_conv')
-            output = batchnorm(output)
-            output = lrelu(output)
+            # output = conv1d_transpose(output, 16, kernal_len, 2, upsample=upsample, name='g_e6_conv')
+            # output = batchnorm(output)
+            # output = lrelu(output)
             print("output", output)
-	    output=tf.reshape(output, [self.batch_size, 1024])
-            output = tf.layers.dense(output, 599)
-	    output=tf.reshape(output, [1, 1, 599, 1])
+	    output=tf.reshape(output, [self.batch_size, 2048])
+            output = tf.layers.dense(output, 2021)
+	    output=tf.reshape(output, [1, 1, 2021, 1])
 
             output = tf.nn.tanh(output)
 
@@ -467,46 +469,42 @@ class pix2pix(object):
 		batchnorm = lambda x: x
 
             output = image
-            output = tf.reshape(output, [self.batch_size, 1021])
-            output = tf.layers.dense(output, 16*dim)
-            output = tf.reshape(output, [self.batch_size, 16, dim])
+            output = tf.reshape(output, [self.batch_size, 252])
+            output = tf.layers.dense(output, 2048)
+            output = tf.reshape(output, [self.batch_size, 2, 1024])
             output = batchnorm(output)
             output = lrelu(output)
             # output = tf.nn.tanh(output)
             
-            output = conv1d_transpose(output, 32, kernal_len, 2, upsample=upsample, name='g_e1_conv')
+            output = conv1d_transpose(output, 512, kernal_len, 4, upsample=upsample, name='g_e1_conv')
             output = batchnorm(output)
             output = lrelu(output)
             # output = tf.nn.tanh(output)
 
-            output = conv1d_transpose(output, 16, kernal_len, 2, upsample=upsample, name='g_e2_conv')
+            output = conv1d_transpose(output, 256, kernal_len, 4, upsample=upsample, name='g_e2_conv')
             output = batchnorm(output)
             output = lrelu(output)
             # output = tf.nn.tanh(output)
 
-            output = conv1d_transpose(output, 8, kernal_len, 2, upsample=upsample, name='g_e3_conv')
+            output = conv1d_transpose(output, 128, kernal_len, 4, upsample=upsample, name='g_e3_conv')
             output = batchnorm(output)
             output = lrelu(output)
             # output = tf.nn.tanh(output)
 
-            output = conv1d_transpose(output, 4, kernal_len, 2, upsample=upsample, name='g_e4_conv')
+            output = conv1d_transpose(output, 64, kernal_len, 4, upsample=upsample, name='g_e4_conv')
             output = batchnorm(output)
             output = lrelu(output)
             # output = tf.nn.tanh(output)
 
-            output = conv1d_transpose(output, 2, kernal_len, 2, upsample=upsample, name='g_e5_conv')
+            output = conv1d_transpose(output, 1, kernal_len, 4, upsample=upsample, name='g_e5_conv')
             output = batchnorm(output)
             output = lrelu(output)
             # output = tf.nn.tanh(output)
-
-            output = conv1d_transpose(output, 1, kernal_len, 2, upsample=upsample, name='g_e6_conv')
-            output = batchnorm(output)
-            output = lrelu(output)
 
             print("output", output)
-	    output=tf.reshape(output, [self.batch_size, 1024])
-            output = tf.layers.dense(output, 599)
-	    output=tf.reshape(output, [self.batch_size, 1, 599, 1])
+	    output=tf.reshape(output, [self.batch_size, 2048])
+            output = tf.layers.dense(output, 2021)
+	    output=tf.reshape(output, [self.batch_size, 1, 2021, 1])
 
             output = tf.nn.tanh(output)
 
