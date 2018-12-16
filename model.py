@@ -80,9 +80,11 @@ class pix2pix(object):
                                         name='real_A_and_B_images')
 
         # image: 1*256*256*3 signal: 1*1*599*1 1*1*2022*1
-        self.real_B = self.real_data[:, :, 252:self.image_size, :]
+        # self.real_B = self.real_data[:, :, 252:self.image_size, :]
+        self.real_B = self.real_data[:, :, 0:2022, :]
         # image: 1*256*256*3 signal: 1*1*1022*1 1*1*252*1
-        self.real_A = self.real_data[:, :, 0:252, :]
+        # self.real_A = self.real_data[:, :, 0:252, :]
+        self.real_A = self.real_data[:, :, 2022:(self.image_size), :]
 	print("real_B", self.real_B)
 	print("real_A", self.real_A)
         self.fake_B = self.generator(self.real_A)
