@@ -142,7 +142,7 @@ class pix2pix(object):
         # else:
         #     sample_images = np.array(sample).astype(np.float32)
         sample_images = np.array(sample).astype(np.float32)
-        sample_images = np.reshape(sample_images, (1, 1, self.image_size,1))
+        sample_images = np.reshape(sample_images, (self.batch_size, 1, self.image_size,1))
        
         return sample_images
 
@@ -155,12 +155,16 @@ class pix2pix(object):
         # save_images(samples, [self.batch_size, 1],
         #             './{}/train_{:02d}_{:04d}.png'.format(sample_dir, epoch, idx))
         # samples=np.reshape(samples, (1, 599))
-        samples=np.reshape(samples, (1, 2022))
-        save_signal(samples, [self.batch_size, 1],
-                    './{}/train_{:02d}_{:04d}.txt'.format(sample_dir, epoch, idx))
-        save_signal_img(samples, [self.batch_size, 1],
-                    './{}/train_{:02d}_{:04d}.png'.format(sample_dir, epoch, idx))
-        print("[Sample] d_loss: {:.8f}, g_loss: {:.8f}".format(d_loss, g_loss))
+        # samples=np.reshape(samples, (1, 2022))
+        print('samples', samples.shape) 
+        for i in range(0, self.batch_size):
+		print('idx=',i)
+       		tmp_samples=np.reshape(samples[i,:,:,:], (1,2022)) 
+        	save_signal(tmp_samples, [self.batch_size, 1],
+                    	'./{}/train_{:02d}_{:04d}_{:04d}.txt'.format(sample_dir, epoch, idx, i))
+        	save_signal_img(tmp_samples, [self.batch_size, 1],
+                    	'./{}/train_{:02d}_{:04d}_{:04d}.png'.format(sample_dir, epoch, idx, i))
+	print("[Sample] d_loss: {:.8f}, g_loss: {:.8f}".format(d_loss, g_loss))
 
     def train(self, args):
         """Train pix2pix"""
@@ -230,10 +234,10 @@ class pix2pix(object):
                     % (epoch, idx, batch_idxs,
                         time.time() - start_time, errD_fake+errD_real, errG))
 
-                if np.mod(counter, 100) == 1:
+                if np.mod(counter, 50) == 1:
                     self.sample_model(args.sample_dir, epoch, idx)
 
-                if np.mod(counter, 500) == 2:
+                if np.mod(counter, 100) == 2:
                     self.save(args.checkpoint_dir, counter)
 
     def discriminator(self, image, y=None, reuse=False):
